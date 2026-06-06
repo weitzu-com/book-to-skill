@@ -9,9 +9,10 @@ description: |
   references 六件套、五维验证、Workflow 并行。经五轮真实书籍（135–314 页，MD/PDF文本/PDF扫描）验证。
 license: MIT
 metadata:
-  version: v2.3
+  version: v2.4
   author: 原点知识库 / 书道流水线
   validated_on: 5 books (会计七原则 / Joe Girard / Claude Code手册 / 经营十二条 / Harness工程之道)
+  changelog: "v2.4 新增溯源门禁（要素须可溯源、不编造原书没有的内容）"
 ---
 
 # 书道 · book-to-skill
@@ -92,6 +93,8 @@ metadata:
 
 **亲自交叉验证（不可跳过）**：选 2-3 个最知名核心章亲自读，对照 Agent 输出查漏补缺。
 
+**🔒 溯源门禁（v2.4，不可跳过）**：L1–L4 每个要素必须能溯源到书中真实位置（章节/页码/原文片段）。**溯源不到的标 `[待核]`，绝不编造原书没有的框架、金句或数据**——book→skill 最大失败模式是"自信地虚构作者没说过的话"。宁可少一条真知识，不可多一条假知识。
+
 > Agent prompt 模板、三 Agent 标准分工、隐含假设与矛盾调和 → 读 `references/02-parse.md`。
 > 章节 ≥9 用 Workflow 并行（pipeline 先到先出）→ 读 `references/05-workflow.md`。
 
@@ -137,6 +140,8 @@ knowledge_graph.md  知识图谱 + 完整度热图 + 隐含假设
 | 应用正确 | 10 个案例角色扮演 | 核心判断一致 |
 | 判断准确 | 5 个变体场景 | 推理符合原书精神 |
 | 边界清晰 | 3 个边界场景 | 正确说"不" |
+
+**🔒 溯源抽检（v2.4）**：随机抽 5 个 L1–L4 要素，逐条回原书核对出处真实存在；命中 `[待核]` 或查无实据者，删除或补源后才算通过。这是「应用正确/判断准确」的前置——**虚构的知识再"自洽"也是污染**。
 
 **结构验证可自动化**：`python3 scripts/check_skill.py <skill_dir>`（查行数/概念数/孤立节点/六件套齐全/路由加载指令）。
 
