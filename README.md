@@ -6,6 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 [![Status: validated](https://img.shields.io/badge/status-validated%20on%205%20books-success.svg)](#validation-track-record--验证记录)
 [![Pipeline: 7 stages](https://img.shields.io/badge/pipeline-7%20stages-orange.svg)](#the-7-stage-pipeline--七阶段流水线)
+[![Version: v2.4](https://img.shields.io/badge/version-v2.4-blue.svg)](#changelog--更新记录)
 
 ---
 
@@ -144,6 +145,13 @@ Five real books, MD / text-PDF / scanned-PDF, 135–314 pages, full conversion i
 ## Governance / 治理
 
 The pipeline governs itself with a **Three Departments / Six Ministries** model (中书起草 *draft* → 门下审驳 *review & veto* → 尚书六部执行 *execute via six ministries*): drafting proposes, the reviewing department can reject, and the six executing ministries carry out the work. Full details in [`references/06-governance.md`](./references/06-governance.md).
+
+---
+
+## Changelog / 更新记录
+
+- **v2.4** — Provenance gate / 溯源门禁: every L1–L4 element must trace to a real location in the book; un-sourceable items are marked `[待核]` and never fabricated, plus a random 5-element source spot-check before validation. 每个要素须溯源到书中真实位置，溯源不到标 `[待核]` 绝不编造；五维验证前先随机抽 5 要素回原书核对。
+- **v2.3** — 5-book validated 7-stage pipeline (MD / text-PDF / scanned-PDF, 135–314 pp). 经五书验证的七阶段流水线。
 
 ---
 
