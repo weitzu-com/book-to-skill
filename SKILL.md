@@ -9,10 +9,10 @@ description: |
   references 六件套、五维验证、Workflow 并行。经五轮真实书籍（135–314 页，MD/PDF文本/PDF扫描）验证。
 license: MIT
 metadata:
-  version: v2.5
+  version: v2.6
   author: 原点知识库 / 书道流水线
   validated_on: 5 books (会计七原则 / Joe Girard / Claude Code手册 / 经营十二条 / Harness工程之道)
-  changelog: "v2.4 新增溯源门禁（要素须可溯源、不编造原书没有的内容）；v2.5 新增发布可见性门禁（他人著作=private）+ 同源去重（防并发孤岛）+ 锚点闭环核查"
+  changelog: "v2.4 新增溯源门禁（要素须可溯源、不编造原书没有的内容）；v2.5 新增发布可见性门禁（他人著作=private）+ 同源去重（防并发孤岛）+ 锚点闭环核查；v2.6 阶段零 PDF 入口首选改为 OpenDataLoader（scripts/pdf_to_structured_md.py，产结构化MD/扫描件自动OCR），旧 pdftotext/PyMuPDF 降为回退"
 ---
 
 # 书道 · book-to-skill
@@ -61,12 +61,22 @@ metadata:
 源文件是什么格式？
 ├── MD（已优化）       → 跳过预处理，查目录完整性          ~2min
 ├── MD（未优化）       → 全角→半角 + 层级规范化            ~5min
-├── PDF（文本型）      → scripts/pdf_to_text.sh → 结构化   ~10-15min
-└── PDF（扫描型/OCR）  → ⚠️ 文件名标(OCR)≠Read能读文字
-                        方案A 首选：scripts/extract_pdf.py（PyMuPDF 提嵌入OCR层，258页<30s）
-                        方案B：tesseract chi_sim OCR（无文字层时）
-                        门禁：关键语义段可读率 ≥60% 才进阶段二，否则重扫
+└── PDF（任意，文本/扫描皆可）
+        首选 ★ scripts/pdf_to_structured_md.py book.pdf
+              → 一条命令产出**结构化** MD（#标题层级+表格+阅读顺序）
+                数字版本地直转 60页/秒；扫描件自动起 hybrid OCR(ocrmac，原生零下载)
+                产物即「MD 已优化」级 → 章节边界检测近乎白送，~2min 直入阶段一
+        回退（首选失败/无 OpenDataLoader 环境时）：
+              文本型 → scripts/pdf_to_text.sh（pdftotext 扁平文本）
+              扫描型 → scripts/extract_pdf.py（PyMuPDF 提嵌入层）/ tesseract chi_sim
+        门禁：脚本只做「有没有文字」的量化闸；关键语义段**可读率 ≥60%** 的语义闸
+              仍由阶段二 Agent/人判，不过则换 --engine easyocr 或换更优源
 ```
+
+> **为何首选 OpenDataLoader**（第一性）：Skill 的保真度 = 输入保真度。`pdf_to_text.sh`
+> 给的是**扁平文本**（丢标题层级/表格/阅读顺序），`pdf_to_structured_md.py` 给的是
+> **结构化 MD**——等于把任意 PDF（连扫描件）预付成最快、最高保真的「MD 已优化」入口。
+> 环境与命令细节见 `references/01-preprocess.md` §0。
 
 **冲突检测（动手前必做，查"同名"更要查"同源"·v2.5）**：
 1. **同名/近似**：搜索 `~/.claude/skills/` 是否有同名 skill。
@@ -172,8 +182,9 @@ knowledge_graph.md  知识图谱 + 完整度热图 + 隐含假设
 
 | 用途 | 命令 |
 |------|------|
-| PDF 文本型 → TXT（保版式+全角转半角）| `bash scripts/pdf_to_text.sh book.pdf` |
-| 扫描版 PDF 提取嵌入 OCR 文字层 | `python3 scripts/extract_pdf.py book.pdf > full_text.txt` |
+| ★ 任意 PDF → 结构化 MD（数字版直转/扫描件自动 OCR） | `python3 scripts/pdf_to_structured_md.py book.pdf` |
+| PDF 文本型 → TXT（回退；扁平文本）| `bash scripts/pdf_to_text.sh book.pdf` |
+| 扫描版 PDF 提取嵌入 OCR 文字层（回退）| `python3 scripts/extract_pdf.py book.pdf > full_text.txt` |
 | 从 TXT 检测章节边界 → 结构化骨架 | `python3 scripts/detect_structure.py full_text.txt` |
 | 对产出 skill 做五维结构验证 | `python3 scripts/check_skill.py <skill_dir>` |
 

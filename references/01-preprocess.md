@@ -2,7 +2,7 @@
 domain: AI开发
 type: 步骤
 maturity: 已验证
-version: v2.3
+version: v2.4
 ---
 
 # 01 · 阶段零/一：格式判断与预处理工程（扫描版 PDF 专项）
@@ -12,15 +12,49 @@ version: v2.3
 
 ---
 
-## 1. 预处理决策树（判格式 → 选路径 → 估时）
+## 0. PDF 首选入口：OpenDataLoader（v2.6）
+
+> **第一性**：Skill 保真度 = 输入保真度。旧路径 `pdftotext` 给**扁平文本**（丢标题层级/
+> 表格/阅读顺序）；OpenDataLoader 给**结构化 Markdown**——把任意 PDF（连扫描件）预付成
+> 最高保真的「MD 已优化」入口。**§1/§2 的 pdftotext/PyMuPDF/tesseract 自此降为回退方案。**
+
+**一条命令（文本型/扫描型都吃）**：
+```bash
+python3 scripts/pdf_to_structured_md.py book.pdf            # 默认简中+英
+python3 scripts/pdf_to_structured_md.py book.pdf --ocr-lang "zh-Hans,en-US,ru-RU"
+python3 scripts/pdf_to_structured_md.py book.pdf --no-ocr   # 只快速模式，不兜底
+```
+- 数字版：本地快速模式 60+ 页/秒直转。
+- 扫描件（产物去图片占位后正文 < 50 字）：**自动**起 hybrid OCR server（引擎 `ocrmac`，
+  macOS Vision，原生零模型下载、~2 页/秒）→ 转完自动关 server。
+- 引擎可选 `--engine easyocr|rapidocr|tesseract`（ocrmac 失手时换 easyocr，需联网下模型）。
+- 退出码：0=拿到正文（数字版/OCR 均可）；2=没提到正文，需换引擎或换更优源。
+
+**环境（已验证事实，2026-06）**：
+- 工具 = Java CLI 的 Python 封装。Java 用 Homebrew OpenJDK；macOS 自带 `/usr/bin/java`
+  是**stub**（无 JRE 也存在），脚本已优先前插 openjdk 盖过它，**不必改 .zshrc**。
+- opendataloader 装在 `~/pdf2md/.venv`；脚本若在无该包的解释器下运行会**自动 re-exec**
+  进该 venv（可用 `$OPENDATALOADER_PYTHON` 覆盖）。安装：
+  `pip install -U "opendataloader-pdf[hybrid]" ocrmac`。
+- `ocrmac` 用 BCP-47 语种码：简中 `zh-Hans`、英 `en-US`、俄 `ru-RU`、阿 `ar-SA`。
+  （改用 easyocr 引擎时语种码为 ISO 639-1：`zh,en,ru,ar`。）
+
+> 量化闸 vs 语义闸：本脚本只判「有没有提到文字」；**可读率 ≥60%** 的语义闸（见 §2 门禁）
+> 仍由阶段二 Agent/人判断——脚本退出 0 不等于语义可读率达标。
+
+---
+
+## 1. 预处理决策树（回退路径 · 判格式 → 选路径 → 估时）
+
+> ⚠️ 本节为 §0 首选失败或无 OpenDataLoader 环境时的**回退**。优先走 §0。
 
 ```
 源文件是什么格式？
 ├── MD（已优化）        → 跳过预处理，只查目录/层级完整性              ~2min
 ├── MD（未优化）        → 全角→半角 + 标题层级规范化（# ## ###）       ~5min
 ├── PDF（文本型）       → pdftotext -layout → TXT → 全角→半角 → 识别章节 ~10-15min
-│                         （scripts/pdf_to_text.sh 一步到位）
-└── PDF（扫描型/OCR）   → ⚠️ 必须先验证文字层，见 §2                   视质量而定
+│                         （scripts/pdf_to_text.sh 一步到位；回退）
+└── PDF（扫描型/OCR）   → ⚠️ 必须先验证文字层，见 §2（回退）          视质量而定
 ```
 
 **文本型 vs 扫描型怎么判**：
